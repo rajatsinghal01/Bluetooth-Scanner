@@ -25,6 +25,7 @@ function ClickedButton() {
                 isBluetoothPresent = false
             }
         });
+
     }
 
 
@@ -44,18 +45,22 @@ function Connect_to_Bluetooth() {
                 Bluetooth_Table.rows.item(0).cells.item(1).innerHTML = device.name
                 const connectedDevice = await device.gatt.connect();
                 bluetoothDevice = connectedDevice;
-                console.log(bluetoothDevice)
                 isConnected = true;
+                console.log(bluetoothDevice);
                 Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "CONNECTED";
                 button.innerHTML = "Disconnect"
+                fetchData();
             })
             .catch(error => { console.log(error); });
     }
 }
 
-function Disconnect() {
-    // if (bluetoothDevice.device === undefined) {
-    console.log("Disconnecting Bluetooth from ", bluetoothDevice.name);
+function fetchData() {
+    // bluetoothDevice.
+}
+
+async function Disconnect() {
+
     bluetoothDevice.disconnect();
     console.log("Bluetooth Disconnected");
     isConnected = false;
@@ -63,7 +68,5 @@ function Disconnect() {
     Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "Disconnected";
     button.innerHTML = "Connect Bluetooth Devices";
     console.log(bluetoothDevice);
-    // }
-
 
 }
