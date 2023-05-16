@@ -38,7 +38,8 @@ function Connect_to_Bluetooth() {
 
         Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "Connecting";
         const Device = navigator.bluetooth.requestDevice({
-            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"],
+            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
+                "6e400003-b5a3-f393-e0a9-e50e24dcca9e", "0000180a-0000-1000-8000-00805f9b34fb"],
             filters: [{
                 namePrefix: "DM"
             }]
@@ -51,16 +52,51 @@ function Connect_to_Bluetooth() {
                 console.log(bluetoothDeviceServer);
                 Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "CONNECTED";
                 button.innerHTML = "Disconnect"
+
+                console.log('Getting Services...');
+                const services = await bluetoothDeviceServer.getPrimaryServices();
+
+                console.log('Getting Characteristics...');
+
+                for (const service of services) {
+
+                    console.log('> Service: ' + service.uuid);
+                    const characteristics = await service.getCharacteristics();
+
+                    characteristics.forEach(characteristic => {
+                        console.log('>> Characteristic: ' + characteristic.uuid + ' ' +
+                            getSupportedProperties(characteristic));
+                    });
+                }
                 fetchData();
+                // await setTimeout(function () {
+                //     console.log("Executed after 10 seconds");
+                //     fetchData();
+
+                // }, 10000);
+
+
+
             })
             .catch(error => { console.log(error); });
     }
 }
+function getSupportedProperties(characteristic) {
+    let supportedProperties = [];
+    for (const p in characteristic.properties) {
+        if (characteristic.properties[p] === true) {
+            supportedProperties.push(p.toUpperCase());
+        }
+    }
+    return '[' + supportedProperties.join(', ') + ']';
+}
 
 async function fetchData() {
 
+    console.log(bluetoothDeviceServer)
     // Fetching Data from Bluetooth Device Connected
-    const infoService = await bluetoothDeviceServer.getPrimaryService("device_information");
+    const infoService = await bluetoothDeviceServer.getPrimaryService("0000180a-0000-1000-8000-00805f9b34fb");
+    // const infoService = await bluetoothDeviceServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
     // Getting device information
 
     // We will get all characteristics from device_information
@@ -81,7 +117,9 @@ async function fetchData() {
             if (index === array.length - 1) resolve();
 
         });
-    });
+    }).catch(error => {
+        console.log(error);
+    });;
     promise.then(() => {
         // Display all the information on the screen
         // use innerHTML
