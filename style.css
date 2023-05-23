@@ -9,7 +9,7 @@ td {
 }
 
 
-#btn_scan {
+Button {
     font-family: 'Open Sans';
     background-color: #0882ce;
     color: white;
@@ -20,7 +20,7 @@ td {
     margin: 20px;
 }
 
-#btn_scan:active {
+Button:active {
     color: #000;
     background-color: aqua;
 }
@@ -44,4 +44,10 @@ td {
     top: 50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
+}
+
+#para_sample {
+    text-align: center;
+    font-family: 'Open Sans';
+    font-size: 20px;
 }

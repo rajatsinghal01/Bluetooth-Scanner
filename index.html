@@ -30,13 +30,21 @@
 
     </table>
     <div style="text-align: center;">
+        <button type="button" id="startNotifications" onclick="onStartNotificationsButtonClick()">
+            Start Notifications
+        </button>
         <button type="button" id="btn_scan" onclick="ClickedButton()">
             Connect Bluetooth Devices
         </button>
+        <button type="button" id="stopNotifications" onclick="onStopNotificationsButtonClick()">
+            Stop Notifications
+        </button>
     </div>
-    <p id="para_sample"> Lorem ipsum dolor sit amet consectetur adipisicing elit. Harum nostrum quasi dicta aliquam fuga
-        enim unde doloribus iure quisquam aut aliquid, soluta, deleniti quaerat sed culpa vitae laboriosam optio nemo.
-    </p>
+    <div style="text-align: center;">
+        <p id="para_sample">Temperature : <span id="temperature_level"> Not Available</span></p>
+
+    </div>
+
     <script src="app.js"></script>
 
 </body>

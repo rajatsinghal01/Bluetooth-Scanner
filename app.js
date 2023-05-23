@@ -1,11 +1,16 @@
 var button = document.getElementById("btn_scan");
 var Bluetooth_Table = document.getElementById("bluetooth_Table");
 var sample_output = document.getElementById("para_sample");
+var TemperatureLevel = document.getElementById("temperature_level");
 var isBluetoothPresent = false;
 var isConnected = false;
 var bluetoothDeviceServer = null;
+var bluetoothDevice;
+var connectedDevice_Server;
+var infoCharacteristic;
 
-function ClickedButton() {
+
+async function ClickedButton() {
 
     if (isConnected) {
 
@@ -32,53 +37,31 @@ function ClickedButton() {
 
 }
 
-function Connect_to_Bluetooth() {
+async function Connect_to_Bluetooth() {
     // Connecting Bluetooth 
     if (isBluetoothPresent == true) {
-
         Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "Connecting";
-        const Device = navigator.bluetooth.requestDevice({
-            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
-                "6e400003-b5a3-f393-e0a9-e50e24dcca9e", "0000180a-0000-1000-8000-00805f9b34fb"],
-            filters: [{
-                namePrefix: "DM"
-            }]
-        })
-            .then(async (device) => {
-                Bluetooth_Table.rows.item(0).cells.item(1).innerHTML = device.name
-                const connectedDevice_Server = await device.gatt.connect();
-                bluetoothDeviceServer = await connectedDevice_Server;
-                isConnected = true;
-                console.log(bluetoothDeviceServer);
-                Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "CONNECTED";
-                button.innerHTML = "Disconnect"
-
-                console.log('Getting Services...');
-                const services = await bluetoothDeviceServer.getPrimaryServices();
-
-                console.log('Getting Characteristics...');
-
-                for (const service of services) {
-
-                    console.log('> Service: ' + service.uuid);
-                    const characteristics = await service.getCharacteristics();
-
-                    characteristics.forEach(characteristic => {
-                        console.log('>> Characteristic: ' + characteristic.uuid + ' ' +
-                            getSupportedProperties(characteristic));
-                    });
+        try {
+            bluetoothDevice = await navigator.bluetooth.requestDevice(
+                {
+                    filters: [
+                        // { services: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"] }
+                        { namePrefix: "*" }
+                    ],
+                    optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
                 }
-                fetchData();
-                // await setTimeout(function () {
-                //     console.log("Executed after 10 seconds");
-                //     fetchData();
+            )
 
-                // }, 10000);
+            Bluetooth_Table.rows.item(0).cells.item(1).innerHTML = bluetoothDevice.name
+            console.log('Requesting any Bluetooth Device...');
 
+            bluetoothDevice.addEventListener('gattserverdisconnected', Disconnect);
+            connect();
 
+        } catch (error) {
+            console.log('Argh! ' + error);
+        }
 
-            })
-            .catch(error => { console.log(error); });
     }
 }
 function getSupportedProperties(characteristic) {
@@ -94,43 +77,12 @@ function getSupportedProperties(characteristic) {
 async function fetchData() {
 
     console.log(bluetoothDeviceServer)
-    // Fetching Data from Bluetooth Device Connected
-    const infoService = await bluetoothDeviceServer.getPrimaryService("0000180a-0000-1000-8000-00805f9b34fb");
-    // const infoService = await bluetoothDeviceServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-    // Getting device information
 
-    // We will get all characteristics from device_information
-    const infoCharacteristics = await infoService.getCharacteristics();
-    console.log(infoCharacteristics);
+    const infoService = await bluetoothDeviceServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 
-    let infoValues = [];
-
-    const promise = new Promise((resolve, reject) => {
-        infoCharacteristics.forEach(async (characteristic, index, array) => {
-
-            // Returns a buffer
-            const value = await characteristic.readValue();
-            console.log(new TextDecoder().decode(value));
-
-            // Convert the buffer to string
-            infoValues.push(new TextDecoder().decode(value));
-            if (index === array.length - 1) resolve();
-
-        });
-    }).catch(error => {
-        console.log(error);
-    });;
-    promise.then(() => {
-        // Display all the information on the screen
-        // use innerHTML
-        sample_output.innerHTML = `
-          Device Information:
-          <ul>
-            ${infoValues.map((value) => `<li>${value}</li>`).join("")}
-          </ul> 
-        `;
-    });
-
+    // // We will get all characteristics from device_information
+    const infoCharacteristic = await infoService.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+    console.log(infoCharacteristic);
 }
 
 async function Disconnect() {
@@ -141,6 +93,103 @@ async function Disconnect() {
     Bluetooth_Table.rows.item(0).cells.item(1).innerHTML = "Not Connected";
     Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "Disconnected";
     button.innerHTML = "Connect Bluetooth Devices";
-    console.log(bluetoothDeviceServer);
+    try {
+        await ClickedButton();
+    } catch (error) {
+        console.log('Argh! ' + error);
+    }
 
 }
+
+
+async function connect() {
+
+    console.log('Connecting to Bluetooth Device... ');
+    connectedDevice_Server = await bluetoothDevice.gatt.connect();
+    const infoService = await connectedDevice_Server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+    const infoCharacteristic = await infoService.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+    success();
+
+}
+
+async function success() {
+
+    console.log('> Bluetooth Device connected.');
+
+    bluetoothDeviceServer = connectedDevice_Server;
+    isConnected = true;
+
+    console.log(bluetoothDeviceServer);
+
+    Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "CONNECTED";
+    button.innerHTML = "Disconnect"
+
+    console.log('Getting Service...');
+
+    var infoService = await bluetoothDeviceServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+
+    // // We will get all characteristics from device_information
+    infoCharacteristic = await infoService.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+    console.log(await infoCharacteristic);
+    infoCharacteristic.addEventListener('characteristicvaluechanged', handleLevelChanged);
+    document.querySelector('#startNotifications').disabled = false;
+    document.querySelector('#stopNotifications').disabled = true;
+}
+async function onStartNotificationsButtonClick() {
+    try {
+        console.log('Starting Temperature Level Notifications...');
+        await infoCharacteristic.startNotifications();
+
+        console.log('> Notifications started');
+        document.querySelector('#startNotifications').disabled = true;
+        document.querySelector('#stopNotifications').disabled = false;
+    } catch (error) {
+        console.log('Argh! ' + error);
+    }
+}
+
+async function onStopNotificationsButtonClick() {
+    try {
+        console.log('Stopping Temperature Level Notifications...');
+        await infoCharacteristic.stopNotifications();
+
+        console.log('> Notifications stopped');
+        document.querySelector('#startNotifications').disabled = false;
+        document.querySelector('#stopNotifications').disabled = true;
+    } catch (error) {
+        console.log('Argh! ' + error);
+    }
+}
+
+function onResetButtonClick() {
+    if (infoCharacteristic) {
+        infoCharacteristic.removeEventListener('characteristicvaluechanged',
+            handleLevelChanged);
+        infoCharacteristic = null;
+    }
+    // Note that it doesn't disconnect device.
+    bluetoothDevice = null;
+    console.log('> Bluetooth Device reset');
+}
+function onDisconnected() {
+    onResetButtonClick();
+    console.log('> Bluetooth Device disconnected');
+    Bluetooth_Table.rows.item(1).cells.item(1).innerHTML = "Disconnected";
+    button.innerHTML = "Connect Bluetooth Devices";
+    sample_output.innerHTML = "Not Available";
+    connect();
+
+}
+
+async function handleLevelChanged(event) {
+    console.log('Characteristic Value Changed');
+    console.log(event.target.value);
+    let value = event.target.value;
+    var level = new TextDecoder().decode(value);
+    console.log('> Temperature Level is ' + level + " ºC");
+    sample_output.innerHTML = level + " ºC";
+
+
+}
+
+
