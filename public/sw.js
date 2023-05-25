@@ -17,6 +17,8 @@ self.addEventListener('install', function (event) {
             .then(cache => {
                 console.log("SW Caching Files");
                 cache.addAll(cacheItems);
+                console.log("SW Caching Files");
+
             })
             .then(() => self.skipWaiting())
     );
