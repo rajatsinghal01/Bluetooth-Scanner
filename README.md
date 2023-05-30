@@ -1,6 +1,6 @@
 # Sensenext-Scanner
 
-It is a Bluetooth Scanner Web Application which works with AGNEXT Sensenext Temperature Monitoring Solution device. It measures the temperature using that device which gets displayed in the application.
+It is a Bluetooth Scanner Web Application which works with Sensenext Temperature Monitoring Solution device. It measures the temperature using that device which gets displayed in the application.
 
 <!-- # Agnext Sensenext Device
 ![Sensenext Device](https://github.com/rajatsinghal01/Bluetooth-Scanner/assets/78733201/53c13ece-7c7b-447d-a0da-f13a3895519a)
